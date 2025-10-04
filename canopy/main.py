@@ -1,15 +1,21 @@
 from fastmcp import FastMCP
 import json
 import os
-import asyncio
+import tomllib
+import sys
+
+def load_policy(path: str) -> dict:
+    with open(path, "rb") as f:
+        return tomllib.load(f)
 
 # Read config from ~/.canopy/mcp_config.json
 config_path = os.path.expanduser("~/.canopy/mcp_config.json")
 with open(config_path, "r") as f:
     mcp_config = json.load(f)
 
-print("Config loaded:", mcp_config)
-
+# Read policy from command line argument if provided
+policy_path = sys.argv[1]
+flow_policy = load_policy(policy_path)
 
 # Create a proxy to the configured server (auto-creates ProxyClient)
 proxy = FastMCP.as_proxy(mcp_config, name="Config-Based Proxy")

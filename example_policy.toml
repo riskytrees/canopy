@@ -1,0 +1,9 @@
+[flows]
+
+[flows.default]
+
+allowed_servers = []
+
+[flows.jira_summarizer]
+
+allowed_servers = ["jira", "notion"]
