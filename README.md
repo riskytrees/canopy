@@ -29,11 +29,11 @@ The big idea canopy tries to address is the following: In most cases, you don't 
 
 [flows.default]
 
-allowed_servers = []
+allowed_calls = []
 
 [flows.jira_summarizer]
 
-allowed_servers = ["jira", "notion"]
+allowed_calls = ["jira*", "notion*"]
 ```
 
 If you run the prior workflow, assuming prompt injection never occurs, canopy will happily allow through MCP actions as usual. However, if at any time your LLM is tricked and starts making requests to the `github` server, canopy will note this isn't allowed and will block it automatically.

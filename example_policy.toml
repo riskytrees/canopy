@@ -2,8 +2,8 @@
 
 [flows.default]
 
-allowed_servers = []
+allowed_calls = []
 
 [flows.jira_summarizer]
 
-allowed_servers = ["jira", "notion"]
+allowed_calls = ["jira*", "notion*"]
