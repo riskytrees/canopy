@@ -5,7 +5,12 @@ import os
 import tomllib
 import sys
 
-class PolicyMiddleware(Middleware):    
+class PolicyMiddleware(Middleware):
+    def __init__(self, policy: dict):
+        super().__init__()
+        # Initialize any policy-related state here
+        self.policy = policy
+
     async def on_message(self, context: MiddlewareContext, call_next):
         """Called for all MCP messages."""
         print(f"Processing {context.method} from {context.source}", file=sys.stderr)
@@ -31,7 +36,7 @@ flow_policy = load_policy(policy_path)
 
 # Create a proxy to the configured server (auto-creates ProxyClient)
 proxy = FastMCP.as_proxy(mcp_config, name="Config-Based Proxy")
-proxy.add_middleware(PolicyMiddleware())
+proxy.add_middleware(PolicyMiddleware(policy=flow_policy))
 
 # Run the proxy with stdio transport for local access
 if __name__ == "__main__":
