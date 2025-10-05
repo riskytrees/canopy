@@ -2,7 +2,7 @@
 
 [flows.default]
 
-allowed_calls = []
+allowed_calls = ["*graph*"]
 
 [flows.jira_summarizer]
 
