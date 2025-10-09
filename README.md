@@ -32,7 +32,7 @@ The big idea canopy tries to address is the following: In most cases, you don't 
 allowed_calls = []
 
 [flows.jira_summarizer]
-
+disabled = true
 allowed_calls = ["jira*", "notion*"]
 ```
 

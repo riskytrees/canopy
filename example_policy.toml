@@ -2,8 +2,8 @@
 
 [flows.default]
 
-allowed_calls = ["*graph*"]
+allowed_calls = [".*graph.*"]
 
 [flows.jira_summarizer]
-
-allowed_calls = ["jira*", "notion*"]
+disabled = true
+allowed_calls = ["jira.*", "notion.*"]
