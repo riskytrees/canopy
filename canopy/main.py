@@ -33,10 +33,6 @@ class PolicyMiddleware(Middleware):
         return result
 
 
-def load_policy(path: str) -> dict:
-    with open(path, "rb") as f:
-        return tomllib.load(f)
-
 # Read config from ~/.canopy/mcp_config.json
 config_path = os.path.expanduser("~/.canopy/mcp_config.json")
 with open(config_path, "r") as f:
@@ -44,11 +40,10 @@ with open(config_path, "r") as f:
 
 # Read policy from command line argument if provided
 policy_path = sys.argv[1]
-flow_policy = load_policy(policy_path)
 
 # Create a proxy to the configured server (auto-creates ProxyClient)
 proxy = FastMCP.as_proxy(mcp_config, name="Config-Based Proxy")
-proxy.add_middleware(PolicyMiddleware(policy=CanopyPolicy(flow_policy)))
+proxy.add_middleware(PolicyMiddleware(policy=CanopyPolicy(policy_path)))
 
 # Run the proxy with stdio transport for local access
 if __name__ == "__main__":
