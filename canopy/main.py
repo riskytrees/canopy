@@ -1,4 +1,4 @@
-from fastmcp import FastMCP
+from fastmcp import Context, FastMCP
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 import json
 import os
@@ -7,6 +7,8 @@ import sys
 import mcp.types as mt
 
 from policy import CanopyPolicy
+
+POLICY = None
 
 class PolicyMiddleware(Middleware):
     def __init__(self, policy: CanopyPolicy):
@@ -22,7 +24,7 @@ class PolicyMiddleware(Middleware):
             tool_name = message.name
 
             # Check if allowed
-            if not self.policy.is_allowed(tool_name):
+            if tool_name not in ["get_canopy_status", "set_canopy_flow"] and not self.policy.is_allowed(tool_name):
                 raise Exception(f"Tool call to {tool_name} is not allowed by policy")
 
             print(f"Processing {context.method} from {context.source} - {tool_name}", file=sys.stderr)
@@ -40,10 +42,24 @@ with open(config_path, "r") as f:
 
 # Read policy from command line argument if provided
 policy_path = sys.argv[1]
+POLICY = CanopyPolicy(policy_path)
 
 # Create a proxy to the configured server (auto-creates ProxyClient)
 proxy = FastMCP.as_proxy(mcp_config, name="Config-Based Proxy")
-proxy.add_middleware(PolicyMiddleware(policy=CanopyPolicy(policy_path)))
+proxy.add_middleware(PolicyMiddleware(POLICY))
+
+@proxy.tool()
+async def get_canopy_status(ctx: Context) -> dict:
+    """Fetches the current configuration state of Canopy."""
+    return {"path": POLICY.policy_path}
+
+
+@proxy.tool()
+async def set_canopy_flow(flow_name: str, ctx: Context) -> dict:
+    """Sets the active flow name. Once set, this can not be changed for the session."""
+    POLICY.set_picked_flow(flow_name)
+    return {"status": "Updated successfully."}
+
 
 # Run the proxy with stdio transport for local access
 if __name__ == "__main__":
