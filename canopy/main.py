@@ -6,7 +6,7 @@ import tomllib
 import sys
 import mcp.types as mt
 
-from policy import CanopyPolicy
+from .policy import CanopyPolicy
 
 POLICY = None
 

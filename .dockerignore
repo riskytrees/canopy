@@ -1,0 +1,10 @@
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+canopy.egg-info/
+*.log
+*.sqlite3
+.DS_Store
