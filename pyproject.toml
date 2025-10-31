@@ -7,7 +7,7 @@ name = "canopy"
 version = "0.1.0"
 description = "Modern Python package for policy management."
 authors = [
-    { name = "Josiah Bruner", email = "" }
+    { name = "RiskyTrees Labs", email = "hello@riskytrees.com" }
 ]
 readme = "README.md"
 license = { file = "LICENSE.md" }
