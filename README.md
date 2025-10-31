@@ -40,7 +40,7 @@ If you then ask your LLM to "use the jira_summarizer canopy policy" and then you
 
 ## Usage
 
-To use `canopy` start by migrating your current MCP config file to `~/.canopy/mcp_config.json`. You can then start the server by running: `docker run canopy:latest`.
+To use `canopy` start by migrating your current MCP config file to `~/.canopy/mcp_config.json` (this file is in https://gofastmcp.com/integrations/mcp-json-configuration format). You can then start the server by running: `docker run canopy:latest`.
 
 Finally, update your LLM client's MCP config to point at your running docker server. Everything should "just work" as your MCP server and tools will be passed through automatically.
 
