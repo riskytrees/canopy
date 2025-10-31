@@ -8,3 +8,6 @@ allowed_calls = ["jira.*", "notion.*"]
 
 [flows.graph_policy]
 allowed_calls = [".*graph.*"]
+
+[flows.github]
+allowed_calls = [".*github.*"]
