@@ -16,4 +16,4 @@ COPY . .
 # Exclude virtual environment and cache folders via .dockerignore
 
 # Set default entrypoint (adjust as needed)
-CMD ["python", "-m", "canopy.main"]
+ENTRYPOINT [ "python", "-m", "canopy.main" ] 
