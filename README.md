@@ -36,10 +36,12 @@ disabled = true
 allowed_calls = ["jira*", "notion*"]
 ```
 
-If you run the prior workflow, assuming prompt injection never occurs, canopy will happily allow through MCP actions as usual. However, if at any time your LLM is tricked and starts making requests to the `github` server, canopy will note this isn't allowed and will block it automatically.
+If you then ask your LLM to "use the jira_summarizer canopy policy" and then you run the prior workflow, assuming prompt injection never occurs, canopy will happily allow through MCP actions as usual. However, if at any time your LLM is tricked and starts making requests to the `github` server, canopy will note this isn't allowed and will block it automatically.
 
 ## Usage
 
 To use `canopy` start by migrating your current MCP config file to `~/.canopy/mcp_config.json`. You can then start the server by running: `docker run canopy:latest`.
 
 Finally, update your LLM client's MCP config to point at your running docker server. Everything should "just work" as your MCP server and tools will be passed through automatically.
+
+When `canopy` starts, it will set the "default" flow as the active one. You can change this by asking your LLM client to use a different canopy policy. Note, however, once set, it can not be updated until Canopy restarts (usually accomplished by restarting your LLM client).
