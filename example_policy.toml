@@ -5,3 +5,6 @@ allowed_calls = []
 
 [flows.jira_summarizer]
 allowed_calls = ["jira.*", "notion.*"]
+
+[flows.graph_policy]
+allowed_calls = [".*graph.*"]
