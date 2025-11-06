@@ -62,8 +62,11 @@ async def set_canopy_flow(flow_name: str, ctx: Context) -> dict:
 
 
 # Run the proxy with stdio transport for local access
-if __name__ == "__main__":
+def main():
     print("\n=== Starting proxy server ===")
     print("Note: The proxy will start and wait for MCP client connections via stdio")
     print("Press Ctrl+C to stop")
     proxy.run()
+
+if __name__ == "__main__":
+    main()
