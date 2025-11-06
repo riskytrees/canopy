@@ -28,15 +28,16 @@ The big idea canopy tries to address is the following: In most cases, you don't 
 [flows]
 
 [flows.default]
-
 allowed_calls = []
 
 [flows.jira_summarizer]
-disabled = true
-allowed_calls = ["jira*", "notion*"]
+allowed_calls = ["jira.*", "notion.*"]
+
+[flows.graph_policy]
+allowed_calls = [".*graph.*"]
 ```
 
-If you then ask your LLM to "use the jira_summarizer canopy policy" and then you run the prior workflow, assuming prompt injection never occurs, canopy will happily allow through MCP actions as usual. However, if at any time your LLM is tricked and starts making requests to the `github` server, canopy will note this isn't allowed and will block it automatically.
+If you then 1) ask your LLM to "use the jira_summarizer canopy policy" and then you 2) run the prior workflow, assuming prompt injection never occurs, canopy will happily allow through MCP actions as usual. However, if at any time your LLM is tricked and starts making requests to the `github` server, canopy will note this isn't allowed and will block it automatically.
 
 ## Usage
 
