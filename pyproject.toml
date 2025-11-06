@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "canopy_mcp"
-version = "0.2.0"
+version = "0.3.0"
 description = "Modern Python package for policy management."
 authors = [
     { name = "RiskyTrees Labs", email = "hello@riskytrees.com" }
@@ -15,4 +15,4 @@ requires-python = ">=3.8"
 dependencies = ["fastmcp"]
 
 [project.urls]
-Homepage = "https://github.com/riskytrees/canopy"
+Homepage = "https://riskytrees.com/canopymcp"
