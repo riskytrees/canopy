@@ -52,3 +52,40 @@ To use `canopy` start by migrating your current MCP config file to `~/.canopy/mc
 Finally, update your LLM client's MCP config to point at your running docker server. Everything should "just work" as your MCP server and tools will be passed through automatically.
 
 When `canopy` starts, it will set the "default" flow as the active one. You can change this by asking your LLM client to use a different canopy policy. Note, however, once set, it can not be updated until Canopy restarts (usually accomplished by restarting your LLM client).
+
+#### Creating Flows
+
+Flows are the basic policy building blocks in canopy. Canopy can respect only one flow at a time.
+
+To create a flow, simply add a new section to `[flows]`:
+
+```
+[flows.<name_of_your_new_flow>]
+```
+
+You then have two options:
+
+1. Create a simple policy which lists which tools can be executed. You do this by creating an array of allowed tool names (regexes are allowed). e.g. `allowed_calls = [".*graph.*"]` to allow all graph actions
+2. You can create an advanced multi-flow policy (see below)
+
+##### Multi-Flow Policies
+Multi-flow policies let you indicate that you want to allow one or more flows to be allowed simultaneously, but with some limit of how many can be true at once. This can help you greatly limit the attack surface of your tools. To do so, you must add two fields: `allowed_flows` which is an array of flow names that are allowed and, optionally, `no_more_than_count` which lets you put a maximum limit
+
+For example, a *very* good starting place is to define a "rule of two" policy, which is thought to prevent large classes of issues with agentic solutions (see: https://ai.meta.com/blog/practical-ai-agent-security/). This can be accomplished by writing:
+
+```
+[flows.ro2_untrustworthy_input]
+allowed_calls = [".*github.*"]
+
+[flows.ro2_sensitive_access]
+allowed_calls = ["memory_read_graph"]
+
+[flows.ro2_state_or_comms]
+allowed_calls = ["memory_add.*", "memory_create.*", "memory_delete.*"]
+
+[flows.rule_of_two]
+allowed_flows = ["ro2_untrustworthy_input", "ro2_sensitive_access", "ro2_state_or_comms"]
+no_more_than_count = 2
+```
+
+And have canopy use the "rule_of_two" policy.
