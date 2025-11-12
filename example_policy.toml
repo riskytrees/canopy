@@ -11,3 +11,16 @@ allowed_calls = [".*graph.*"]
 
 [flows.github]
 allowed_calls = [".*github.*"]
+
+[flows.ro2_untrustworthy_input]
+allowed_calls = [".*github.*"]
+
+[flows.ro2_sensitive_access]
+allowed_calls = ["memory_read_graph"]
+
+[flows.ro2_state_or_comms]
+allowed_calls = ["memory_add.*", "memory_create.*", "memory_delete.*"]
+
+[flows.rule_of_two]
+allowed_flows = ["ro2_untrustworthy_input", "ro2_sensitive_access", "ro2_state_or_comms"]
+no_more_than_count = 2
