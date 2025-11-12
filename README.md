@@ -69,7 +69,7 @@ You then have two options:
 2. You can create an advanced multi-flow policy (see below)
 
 ##### Multi-Flow Policies
-Multi-flow policies let you indicate that you want to allow one or more flows to be allowed simultaneously, but with some limit of how many can be true at once. This can help you greatly limit the attack surface of your tools. To do so, you must add to fields: `allowed_flows` which is an array of flow names that are allowed and, optionally, `no_more_than_count` which lets you put a maximum limit
+Multi-flow policies let you indicate that you want to allow one or more flows to be allowed simultaneously, but with some limit of how many can be true at once. This can help you greatly limit the attack surface of your tools. To do so, you must add two fields: `allowed_flows` which is an array of flow names that are allowed and, optionally, `no_more_than_count` which lets you put a maximum limit
 
 For example, a *very* good starting place is to define a "rule of two" policy, which is thought to prevent large classes of issues with agentic solutions (see: https://ai.meta.com/blog/practical-ai-agent-security/). This can be accomplished by writing:
 
