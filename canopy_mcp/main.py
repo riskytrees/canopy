@@ -5,9 +5,18 @@ import os
 import sys
 import mcp.types as mt
 
+from fastmcp.client.elicitation import ElicitResult
+
 from .policy import CanopyPolicy
 
-POLICY = None
+_POLICY = None
+
+
+def get_policy():
+    global _POLICY
+    if _POLICY is None:
+        raise Exception("CanopyPolicy is not initialized.")
+    return _POLICY
 
 class PolicyMiddleware(Middleware):
     def __init__(self, policy: CanopyPolicy):
@@ -23,7 +32,7 @@ class PolicyMiddleware(Middleware):
             tool_name = message.name
 
             # Check if allowed
-            if tool_name not in ["get_canopy_status", "set_canopy_flow"] and not self.policy.is_allowed(tool_name):
+            if tool_name not in ["get_canopy_status", "change_canopy_flow"] and not self.policy.is_allowed(tool_name):
                 raise Exception(f"Tool call to {tool_name} is not allowed by policy")
 
             print(f"Processing {context.method} from {context.source} - {tool_name}", file=sys.stderr)
@@ -41,23 +50,35 @@ with open(config_path, "r") as f:
 
 # Read policy from command line argument if provided
 policy_path = sys.argv[1]
-POLICY = CanopyPolicy(policy_path)
+_POLICY = CanopyPolicy(policy_path)
 
 # Create a proxy to the configured server (auto-creates ProxyClient)
 proxy = FastMCP.as_proxy(mcp_config, name="Config-Based Proxy")
-proxy.add_middleware(PolicyMiddleware(POLICY))
+proxy.add_middleware(PolicyMiddleware(_POLICY))
 
 @proxy.tool()
 async def get_canopy_status(ctx: Context) -> dict:
     """Fetches the current configuration state of Canopy."""
-    return {"path": POLICY.policy_path}
+    policy = get_policy()
+    return {"path": policy.policy_path, "picked_flow": policy.picked_flow}
 
 
 @proxy.tool()
-async def set_canopy_flow(flow_name: str, ctx: Context) -> dict:
-    """Sets the active flow name. Once set, this can not be changed for the session."""
-    POLICY.set_picked_flow(flow_name)
-    return {"status": "Updated successfully."}
+async def change_canopy_flow(ctx: Context) -> dict:
+    """Starts the process for changing/setting the active flow name for canopy. This will elicit user confirmation. This takes no parameters and you do not need prior information to run this."""
+    result = await ctx.elicit(
+        message="Please provide your information",
+        response_type=str
+    )
+    
+    if result.action == "accept":
+        print(f"Flow changed to {result.data}", file=sys.stderr)
+        policy = get_policy()
+        policy.set_picked_flow(result.data)
+        return {"status": "Updated successfully."}
+   
+    raise Exception("Flow change was not accepted by user.")
+    
 
 
 # Run the proxy with stdio transport for local access

@@ -37,7 +37,7 @@ allowed_calls = ["jira.*", "notion.*"]
 allowed_calls = [".*graph.*"]
 ```
 
-If you then 1) ask your LLM to "use the jira_summarizer canopy policy" and then you 2) run the prior workflow, assuming prompt injection never occurs, canopy will happily allow through MCP actions as usual. However, if at any time your LLM is tricked and starts making requests to the `github` server, canopy will note this isn't allowed and will block it automatically.
+You then 1) ask your LLM to "change the canopy policy", 2) provide "jira_summarizer" as input when prompted and then 3) run the prior workflow. Assuming prompt injection does not occur, canopy will happily allow through MCP actions as usual. However, if at any time your LLM is tricked and starts making requests to the `github` server, canopy will note this isn't allowed and will **block it automatically**.
 
 ## Usage
 
@@ -51,7 +51,7 @@ To use `canopy` start by migrating your current MCP config file to `~/.canopy/mc
 
 Finally, update your LLM client's MCP config to point at your running docker server. Everything should "just work" as your MCP server and tools will be passed through automatically.
 
-When `canopy` starts, it will set the "default" flow as the active one. You can change this by asking your LLM client to use a different canopy policy. Note, however, once set, it can not be updated until Canopy restarts (usually accomplished by restarting your LLM client).
+When `canopy` starts, it will set the "default" flow as the active one. You can change this by asking your LLM client to use a different canopy policy. This will cause your client to prompt you for a new flow. This will always require user interaction to prevent malicious MCP responses from tampering with this.
 
 #### Creating Flows
 
