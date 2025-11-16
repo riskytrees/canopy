@@ -12,8 +12,6 @@ class CanopyPolicy():
         self.seen_allowed_flows = set()
 
     def set_picked_flow(self, flow_name: str):
-        if self.picked_flow is not None:
-            raise Exception("Picked flow already set. This can not be undone this session.")
         self.picked_flow = flow_name
 
     def load_policy(self, path: str) -> dict:
