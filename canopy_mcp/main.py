@@ -53,7 +53,7 @@ policy_path = sys.argv[1]
 _POLICY = CanopyPolicy(policy_path)
 
 # Create a proxy to the configured server (auto-creates ProxyClient)
-proxy = FastMCP.as_proxy(mcp_config, name="Config-Based Proxy")
+proxy = FastMCP.as_proxy(mcp_config, name="Canopy MCP")
 proxy.add_middleware(PolicyMiddleware(_POLICY))
 
 @proxy.tool()
