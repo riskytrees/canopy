@@ -37,10 +37,13 @@ class CanopyPolicy():
                 if not flow.get("disabled", False):
                     allowed = False
                     for allowed_call in allowed_calls:
-                        regex_call = re.compile(allowed_call)
-                        if regex_call.fullmatch(tool_call):
-                            allowed = True
-                            break
+                        try:
+                            regex_call = re.compile(allowed_call)
+                            if regex_call.fullmatch(tool_call):
+                                allowed = True
+                                break
+                        except Exception as e:
+                            raise ValueError(f"Invalid regex in policy for allowed_call: {allowed_call}") from e
                     
                     if allowed:
                         return True
