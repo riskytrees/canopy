@@ -42,7 +42,7 @@ class CanopyPolicy():
                             if regex_call.fullmatch(tool_call):
                                 allowed = True
                                 break
-                        except Exception as e:
+                        except re.error as e:
                             raise ValueError(f"Invalid regex in policy for allowed_call: {allowed_call}") from e
                     
                     if allowed:
