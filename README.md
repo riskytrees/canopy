@@ -1,6 +1,8 @@
 # canopy
 Canopy is an MCP proxy server that adds the ability to define and enforce tool interaction policies. It can be used to improve the safety of complex MCP server workflows in the presence of prompt injection attacks.
 
+You can also use canopy to detect (and block) tool responses that seem to contain prompt injection or jailbreaks.
+
 ## Example
 
 ### The Setup
@@ -89,3 +91,21 @@ no_more_than_count = 2
 ```
 
 And have canopy use the "rule_of_two" policy.
+
+### Enabling Prompt Injection and Jailbreak Blocking
+`canopy` can make use of LLama's PromptGuard2 model to probabilistically detect (and block) tool calls (locally) whose responses
+contain prompt injection attacks (or jailbreaks). This will not catch every possible attack (which is why you should write policies), but is a useful added layer of defense.
+
+To use this:
+
+1. Create an account on Hugging Face which is needed to download the model.
+2. Navigate to the PromptGuard 2 86M model.
+3. Accept Meta's terms and request access to Llama models.
+4. Wait until you are granted access.
+5. Create a Hugging Face API token at Hugging Face settings (you need to grant two scopes: "Read access to contents of all public gated repos you can access" and "Make calls to Inference Providers").
+6. Finally, add `HF_TOKEN` as the (only) environment variable for canopy in your MCP configuration and provide the token you just obtained.
+
+After that, `canopy` will automatically check tool call responses using PromptGuard and block calls that were detected as malicious.
+
+Note: Canopy will be slow to start the *first* time run it after enabling PromptGuard. This is because it will need to download the model from HuggingFace which will take time. Rest assured, however, that all following launches will be speedy fast.
+

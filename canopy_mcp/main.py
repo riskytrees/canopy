@@ -6,9 +6,9 @@ import sys
 import mcp.types as mt
 
 from fastmcp.client.elicitation import ElicitResult
-from transformers import pipeline
+from fastmcp.tools.tool import Tool, ToolResult
 
-classifier = pipeline("text-classification", model="meta-llama/Prompt-Guard-86M")
+from transformers import pipeline
 
 from .policy import CanopyPolicy
 
@@ -26,6 +26,9 @@ class PolicyMiddleware(Middleware):
         super().__init__()
         # Initialize any policy-related state here
         self.policy = policy
+        self.classifier = None
+        if os.getenv("HF_TOKEN") is not None:
+            self.classifier = pipeline("text-classification", model="meta-llama/Prompt-Guard-86M")
 
     async def on_message(self, context: MiddlewareContext, call_next):
         """Called for all MCP messages."""
@@ -42,7 +45,15 @@ class PolicyMiddleware(Middleware):
             print(f"Processing {context.method} from {context.source} - {tool_name}", file=sys.stderr)
         
         result = await call_next(context)
-        
+        if isinstance(result, ToolResult) and self.classifier is not None:
+            content = str(result.content)
+            chunks = [content[i:i+512] for i in range(0, len(content), 512)]
+            for chunk in chunks:
+                classifier_output = self.classifier(chunk)
+
+                if classifier_output and classifier_output[0]['label'] != 'BENIGN':
+                    raise Exception(f"Tool call to {tool_name} was classified as malicious.")
+
         print(f"Completed {context.method}",file=sys.stderr)
         return result
 
