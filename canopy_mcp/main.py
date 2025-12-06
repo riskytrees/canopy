@@ -6,6 +6,9 @@ import sys
 import mcp.types as mt
 
 from fastmcp.client.elicitation import ElicitResult
+from transformers import pipeline
+
+classifier = pipeline("text-classification", model="meta-llama/Prompt-Guard-86M")
 
 from .policy import CanopyPolicy
 
@@ -27,6 +30,7 @@ class PolicyMiddleware(Middleware):
     async def on_message(self, context: MiddlewareContext, call_next):
         """Called for all MCP messages."""
         message = context.message
+        print(f"Message {context.message}",file=sys.stderr)
 
         if isinstance(message, mt.CallToolRequestParams):
             tool_name = message.name
