@@ -116,7 +116,7 @@ Canopy supports secure storage and injection of secrets using your operating sys
 #### How it works
 
 - In your MCP config (e.g., `~/.canopy/mcp_config.json`), indicate secrets using the syntax `${CANOPY_<SECRET_NAME>}` (e.g., `${CANOPY_OPENAI_KEY}`).
-- When Canopy starts, it will check your system credential store (e.g. Keychain on macOS for a matching credential)
+- When Canopy starts, it will check your system credential store (e.g. Keychain on macOS) for a matching credential
 - If it exists, it will be injected into the downstream MCP server automatically.
 - If it does not, a placeholder will be created in your credential store. The service name will be "canopy" and the account name will be the credential reference (e.g. `CANOPY_OPENAI_KEY` )
 
