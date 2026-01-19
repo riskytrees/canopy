@@ -23,6 +23,7 @@ def resolve_canopy_secrets(config: dict) -> dict:
                 secret = keyring.get_password('canopy', secret_name)
                 if secret is None:
                     keyring.set_password('canopy', secret_name, "TODO")
+                    secret = "TODO"
                 return secret
             else:
                 return obj
