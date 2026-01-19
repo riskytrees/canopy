@@ -22,9 +22,7 @@ def resolve_canopy_secrets(config: dict) -> dict:
                 secret_name = match.group(1)
                 secret = keyring.get_password('canopy', secret_name)
                 if secret is None:
-                    print(f"Secret '{secret_name}' not found in keyring. Please enter the value:")
-                    secret = getpass.getpass(f"Enter value for {secret_name}: ")
-                    keyring.set_password('canopy', secret_name, secret)
+                    keyring.set_password('canopy', secret_name, "TODO")
                 return secret
             else:
                 return obj
