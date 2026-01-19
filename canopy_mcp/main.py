@@ -2,6 +2,7 @@ from fastmcp import Context, FastMCP
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 import json
 import os
+from .secret_resolver import resolve_canopy_secrets
 import sys
 import mcp.types as mt
 
@@ -60,8 +61,32 @@ class PolicyMiddleware(Middleware):
 
 # Read config from ~/.canopy/mcp_config.json
 config_path = os.path.expanduser("~/.canopy/mcp_config.json")
+
 with open(config_path, "r") as f:
     mcp_config = json.load(f)
+
+# Resolve ${CANOPY_} secrets using keyring and inject into environment
+mcp_config = resolve_canopy_secrets(mcp_config)
+import re
+def inject_canopy_secrets(config):
+    pattern = re.compile(r'\$\{(CANOPY_[A-Z0-9_]+)\}')
+    def _inject(obj):
+        if isinstance(obj, dict):
+            for v in obj.values():
+                _inject(v)
+        elif isinstance(obj, list):
+            for i in obj:
+                _inject(i)
+        elif isinstance(obj, str):
+            match = pattern.fullmatch(obj)
+            if match:
+                secret_name = match.group(1)
+                import keyring
+                secret = keyring.get_password('canopy', secret_name)
+                if secret is not None:
+                    os.environ[secret_name] = secret
+    _inject(config)
+inject_canopy_secrets(mcp_config)
 
 # Read policy from command line argument if provided
 policy_path = sys.argv[1]
