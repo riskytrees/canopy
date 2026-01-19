@@ -2,7 +2,6 @@ from fastmcp import Context, FastMCP
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 import json
 import os
-from .secret_resolver import resolve_canopy_secrets
 import sys
 import mcp.types as mt
 
@@ -12,6 +11,7 @@ from fastmcp.tools.tool import Tool, ToolResult
 from transformers import pipeline
 
 from .policy import CanopyPolicy
+from .secret_resolver import resolve_canopy_secrets
 
 _POLICY = None
 

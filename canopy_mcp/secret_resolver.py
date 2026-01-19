@@ -8,7 +8,7 @@ CANOPY_SECRET_PATTERN = re.compile(r'\$\{(CANOPY_[A-Z0-9_]+)\}')
 def resolve_canopy_secrets(config: dict) -> dict:
     """
     Recursively resolve ${CANOPY_...} secrets in the config dict using keyring.
-    Prompts the user for missing secrets and stores them securely.
+    If a secret is not found, it will be set to "TODO" in keyring and None in the config.
     Returns a new config dict with secrets injected.
     """
     def _resolve(obj):
