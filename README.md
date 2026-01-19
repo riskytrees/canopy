@@ -109,3 +109,24 @@ After that, `canopy` will automatically check tool call responses using PromptGu
 
 Note: Canopy will be slow to start the *first* time run it after enabling PromptGuard. This is because it will need to download the model from HuggingFace which will take time. Rest assured, however, that all following launches will be speedy fast.
 
+### Secure Credential Storage and Secret Injection
+
+Canopy supports secure storage and injection of secrets using your operating system's keyring. This allows you to avoid storing sensitive API keys or credentials in plain text MCP configuration files.
+
+#### How it works
+
+- In your MCP config (e.g., `~/.canopy/mcp_config.json`), indicate secrets using the syntax `${CANOPY_<SECRET_NAME>}` (e.g., `${CANOPY_OPENAI_KEY}`).
+- When Canopy starts, it will check your system credential store (e.g. Keychain on macOS) for a matching credential
+- If it exists, it will be injected into the downstream MCP server automatically.
+- If it does not, a placeholder will be created in your credential store. The service name will be "canopy" and the account name will be the credential reference (e.g. `CANOPY_OPENAI_KEY` )
+
+#### Example
+
+In your MCP config:
+```json
+{
+  "openai": {
+    "api_key": "${CANOPY_OPENAI_KEY}"
+  }
+}
+```

@@ -11,6 +11,7 @@ from fastmcp.tools.tool import Tool, ToolResult
 from transformers import pipeline
 
 from .policy import CanopyPolicy
+from .secret_resolver import resolve_canopy_secrets
 
 _POLICY = None
 
@@ -60,8 +61,13 @@ class PolicyMiddleware(Middleware):
 
 # Read config from ~/.canopy/mcp_config.json
 config_path = os.path.expanduser("~/.canopy/mcp_config.json")
+
 with open(config_path, "r") as f:
     mcp_config = json.load(f)
+
+# Resolve ${CANOPY_} secrets using keyring and inject into environment
+mcp_config = resolve_canopy_secrets(mcp_config)
+
 
 # Read policy from command line argument if provided
 policy_path = sys.argv[1]
