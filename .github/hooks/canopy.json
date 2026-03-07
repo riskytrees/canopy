@@ -3,13 +3,13 @@
 		"PreToolUse": [
 			{
 				"type": "command",
-				"command": "env/bin/python -m canopy_mcp /Users/josiahbruner/.canopy/policy.toml --hook"
+				"command": "env/bin/python -m canopy_mcp example_policy.toml --hook"
 			}
 		],
 		"PostToolUse": [
 			{
 				"type": "command",
-				"command": "env/bin/python -m canopy_mcp /Users/josiahbruner/.canopy/policy.toml --hook"
+				"command": "env/bin/python -m canopy_mcp example_policy.toml --hook"
 			}
 		]
 	}
