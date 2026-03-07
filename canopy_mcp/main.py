@@ -12,6 +12,7 @@ from transformers import pipeline
 
 from .policy import CanopyPolicy
 from .secret_resolver import resolve_canopy_secrets
+from .hooks import handle_hook
 
 _POLICY = None
 
@@ -59,55 +60,58 @@ class PolicyMiddleware(Middleware):
         return result
 
 
-# Read config from ~/.canopy/mcp_config.json
-config_path = os.path.expanduser("~/.canopy/mcp_config.json")
-
-with open(config_path, "r") as f:
-    mcp_config = json.load(f)
-
-# Resolve ${CANOPY_} secrets using keyring and inject into environment
-mcp_config = resolve_canopy_secrets(mcp_config)
-
 
 # Read policy from command line argument if provided
 policy_path = sys.argv[1]
 _POLICY = CanopyPolicy(policy_path)
 
-# Create a proxy to the configured server (auto-creates ProxyClient)
-proxy = FastMCP.as_proxy(mcp_config, name="Canopy MCP")
-proxy.add_middleware(PolicyMiddleware(_POLICY))
-
-@proxy.tool()
-async def get_canopy_status(ctx: Context) -> dict:
-    """Fetches the current configuration state of Canopy."""
-    policy = get_policy()
-    return {"path": policy.policy_path, "picked_flow": policy.picked_flow}
-
-
-@proxy.tool()
-async def change_canopy_flow(ctx: Context) -> dict:
-    """Starts the process for changing/setting the active flow name for canopy. This will elicit user confirmation. This takes no parameters and you do not need prior information to run this."""
-    result = await ctx.elicit(
-        message="Please provide your information",
-        response_type=str
-    )
-    
-    if result.action == "accept":
-        print(f"Flow changed to {result.data}", file=sys.stderr)
-        policy = get_policy()
-        policy.set_picked_flow(result.data)
-        return {"status": "Updated successfully."}
-   
-    raise Exception("Flow change was not accepted by user.")
-    
-
-
 # Run the proxy with stdio transport for local access
 def main():
-    print("\n=== Starting proxy server ===")
-    print("Note: The proxy will start and wait for MCP client connections via stdio")
-    print("Press Ctrl+C to stop")
-    proxy.run()
+    if len(sys.argv) > 2 and sys.argv[2] == '--hook':
+        # If the first argument is --hook, we are running as a hook and should not start the proxy server
+        # Note: This will print to stdout as needed. No other output should be printed to stdout in this mode.
+        exit(handle_hook(_POLICY))
+    else:
+        # Create a proxy to the configured server (auto-creates ProxyClient)
+        # Read config from ~/.canopy/mcp_config.json
+        config_path = os.path.expanduser("~/.canopy/mcp_config.json")
+
+        with open(config_path, "r") as f:
+            mcp_config = json.load(f)
+
+        # Resolve ${CANOPY_} secrets using keyring and inject into environment
+        mcp_config = resolve_canopy_secrets(mcp_config)
+
+        proxy = FastMCP.as_proxy(mcp_config, name="Canopy MCP")
+        proxy.add_middleware(PolicyMiddleware(_POLICY))
+
+        @proxy.tool()
+        async def get_canopy_status(ctx: Context) -> dict:
+            """Fetches the current configuration state of Canopy."""
+            policy = get_policy()
+            return {"path": policy.policy_path, "picked_flow": policy.picked_flow}
+
+
+        @proxy.tool()
+        async def change_canopy_flow(ctx: Context) -> dict:
+            """Starts the process for changing/setting the active flow name for canopy. This will elicit user confirmation. This takes no parameters and you do not need prior information to run this."""
+            result = await ctx.elicit(
+                message="Please provide your information",
+                response_type=str
+            )
+            
+            if result.action == "accept":
+                print(f"Flow changed to {result.data}", file=sys.stderr)
+                policy = get_policy()
+                policy.set_picked_flow(result.data)
+                return {"status": "Updated successfully."}
+        
+            raise Exception("Flow change was not accepted by user.")
+    
+        print("\n=== Starting proxy server ===")
+        print("Note: The proxy will start and wait for MCP client connections via stdio")
+        print("Press Ctrl+C to stop")
+        proxy.run()
 
 if __name__ == "__main__":
     main()
