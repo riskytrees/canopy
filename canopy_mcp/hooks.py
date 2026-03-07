@@ -33,7 +33,15 @@ from canopy_mcp.policy import CanopyPolicy
 # Other = Non-blocking warning: show warning to user, continue processing
 
 def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
-    pass
+    try:
+        with open(f"~/.canopy/.sessions/{session_id}.json", "r") as f:
+            state = json.load(f)
+            policy.picked_flow = state.get("picked_flow")
+            policy.seen_allowed_flows = set(state.get("seen_allowed_flows", []))
+    except FileNotFoundError:
+        # No previous state found, continue with current policy
+        pass
+    return policy
 
 # Stores important parts of CanopyPolicy in a session-specific file for later retrieval.
 # This allows the policy to be reloaded in subsequent hook calls for the same session.
