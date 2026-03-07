@@ -13,17 +13,23 @@ cat > test-input.json << 'EOF'
 }
 EOF
 
+did_fail=0
+
 env/bin/python -m canopy_mcp example_policy.toml --hook < test-input.json
 exit_code=$?
 if [ "$exit_code" -ne 2 ]; then
     echo "FAIL"
+    did_fail=1
 fi
 
 env/bin/python -m canopy_mcp example_policy.toml --hook < test-input.json
 exit_code=$?
 if [ "$exit_code" -ne 2 ]; then
     echo "FAIL"
+    did_fail=1
 fi
 
 rm test-input.json
 rm /tmp/.canopy/.sessions/test-123.json
+
+return $did_fail
