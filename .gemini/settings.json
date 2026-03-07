@@ -1,0 +1,24 @@
+{
+	"hooks": {
+		"BeforeTool": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "env/bin/python -m canopy_mcp /Users/josiahbruner/.canopy/policy.toml --hook"
+					}
+				]
+			}
+		],
+		"AfterTool": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "env/bin/python -m canopy_mcp /Users/josiahbruner/.canopy/policy.toml --hook"
+					}
+				]
+			}
+		]
+	}
+}
