@@ -70,7 +70,7 @@ def main():
     if len(sys.argv) > 2 and sys.argv[2] == '--hook':
         # If the first argument is --hook, we are running as a hook and should not start the proxy server
         # Note: This will print to stdout as needed. No other output should be printed to stdout in this mode.
-        return handle_hook(_POLICY)
+        exit(handle_hook(_POLICY))
     else:
         # Create a proxy to the configured server (auto-creates ProxyClient)
         # Read config from ~/.canopy/mcp_config.json
