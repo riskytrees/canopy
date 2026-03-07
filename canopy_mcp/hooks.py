@@ -2,9 +2,10 @@ import sys
 import json
 
 from canopy_mcp.policy import CanopyPolicy
+import os
 
 
-# Common Input:
+# VSCode Common Input:
 
 """
 {
@@ -13,6 +14,18 @@ from canopy_mcp.policy import CanopyPolicy
   "sessionId": "session-identifier",
   "hookEventName": "PreToolUse",
   "transcript_path": "/path/to/transcript.json"
+}
+"""
+
+# Gemini Common Input:
+
+"""
+{
+  "session_id": string,      // Unique ID for the current session
+  "transcript_path": string, // Absolute path to session transcript JSON
+  "cwd": string,             // Current working directory
+  "hook_event_name": string, // The firing event (e.g. "BeforeTool")
+  "timestamp": string        // ISO 8601 execution time
 }
 """
 
@@ -34,7 +47,7 @@ from canopy_mcp.policy import CanopyPolicy
 
 def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
     try:
-        with open(f"~/.canopy/.sessions/{session_id}.json", "r") as f:
+        with open(f"/tmp/.canopy/.sessions/{session_id}.json", "r") as f:
             state = json.load(f)
             policy.picked_flow = state.get("picked_flow")
             policy.seen_allowed_flows = set(state.get("seen_allowed_flows", []))
@@ -47,10 +60,13 @@ def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
 # This allows the policy to be reloaded in subsequent hook calls for the same session.
 # Stored in ~/.canopy/.sessions/{session_id}.json
 def save_policy_state(session_id, policy: CanopyPolicy) -> None:
-  with open(f"~/.canopy/.sessions/{session_id}.json", "w") as f:
+  session_dir = os.path.expanduser("/tmp/.canopy/.sessions")
+  os.makedirs(session_dir, exist_ok=True)
+  session_file = os.path.join(session_dir, f"{session_id}.json")
+  with open(session_file, "w") as f:
     json.dump({
-        "picked_flow": policy.picked_flow,
-        "seen_allowed_flows": list(policy.seen_allowed_flows)
+      "picked_flow": policy.picked_flow,
+      "seen_allowed_flows": list(policy.seen_allowed_flows)
     }, f)
 
 
@@ -100,8 +116,8 @@ def handle_hook(policy: CanopyPolicy) -> int:
     input_data = json.load(sys.stdin)
 
     # Process the hook event
-    session_id = input_data.get("sessionId")
-    hook_event_name = input_data.get("hookEventName")
+    session_id = input_data.get("sessionId", input_data.get("session_id"))
+    hook_event_name = input_data.get("hookEventName", input_data.get("hook_event_name"))
 
     policy = load_policy_state(policy, session_id)
 
