@@ -32,6 +32,20 @@ from canopy_mcp.policy import CanopyPolicy
 # 2 = Blocking error: stop processing and show error to model
 # Other = Non-blocking warning: show warning to user, continue processing
 
+def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
+    pass
+
+# Stores important parts of CanopyPolicy in a session-specific file for later retrieval.
+# This allows the policy to be reloaded in subsequent hook calls for the same session.
+# Stored in ~/.canopy/.sessions/{session_id}.json
+def save_policy_state(session_id, policy: CanopyPolicy) -> None:
+  with open(f"~/.canopy/.sessions/{session_id}.json", "w") as f:
+    json.dump({
+        "picked_flow": policy.picked_flow,
+        "seen_allowed_flows": list(policy.seen_allowed_flows)
+    }, f)
+
+
 
 # Pre-Tool Input:
 """
@@ -73,6 +87,7 @@ def pre_tool_use_hook(input_data: dict, session_id: str, policy: CanopyPolicy) -
 
 
 def handle_hook(policy: CanopyPolicy) -> int:
+
     # Read the JSON input from stdin
     input_data = json.load(sys.stdin)
 
@@ -80,9 +95,16 @@ def handle_hook(policy: CanopyPolicy) -> int:
     session_id = input_data.get("sessionId")
     hook_event_name = input_data.get("hookEventName")
 
+    policy = load_policy_state(policy, session_id)
+
+    resp_code = None
+
     if hook_event_name == "PreToolUse":
-        return pre_tool_use_hook(input_data, session_id, policy)
+        resp_code = pre_tool_use_hook(input_data, session_id, policy)
     else:
         # Unknown hook event, continue processing
         print(json.dumps({"continue": True}), file=sys.stdout)
-        return 0
+        resp_code = 0
+
+    save_policy_state(session_id, policy)
+    return resp_code
