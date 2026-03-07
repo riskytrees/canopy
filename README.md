@@ -55,6 +55,23 @@ Finally, update your LLM client's MCP config to point at your running docker ser
 
 When `canopy` starts, it will set the "default" flow as the active one. You can change this by asking your LLM client to use a different canopy policy. This will cause your client to prompt you for a new flow. This will always require user interaction to prevent malicious MCP responses from tampering with this.
 
+### Hook Mode
+
+Canopy can also run as a policy hook for environments that call external hooks before tool execution (for example, VS Code or Gemini). In this mode, Canopy reads a JSON hook payload from stdin, evaluates it against your policy, writes a JSON decision to stdout, and exits.
+
+Run the hook process like this:
+
+```
+python -m canopy_mcp <path_to_policy_file> --hook
+```
+
+Notes:
+
+- Hook mode does not start the proxy server or read your MCP config. It only evaluates the incoming hook event.
+- Supported hook event names are `PreToolUse` (VS Code) and `BeforeTool` (Gemini), supplied as `hookEventName` or `hook_event_name`.
+- The hook uses `sessionId` or `session_id` to persist policy state across calls in `/tmp/.canopy/.sessions/<session_id>.json`.
+- Exit code `0` allows the tool call; exit code `2` blocks it and returns a structured deny response on stdout.
+
 #### Creating Flows
 
 Flows are the basic policy building blocks in canopy. Canopy can respect only one flow at a time.
