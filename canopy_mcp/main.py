@@ -12,6 +12,7 @@ from transformers import pipeline
 
 from .policy import CanopyPolicy
 from .secret_resolver import resolve_canopy_secrets
+from .hooks import handle_hook
 
 _POLICY = None
 
@@ -104,10 +105,15 @@ async def change_canopy_flow(ctx: Context) -> dict:
 
 # Run the proxy with stdio transport for local access
 def main():
-    print("\n=== Starting proxy server ===")
-    print("Note: The proxy will start and wait for MCP client connections via stdio")
-    print("Press Ctrl+C to stop")
-    proxy.run()
+    if sys.argv[2] == '--hook':
+        # If the first argument is --hook, we are running as a hook and should not start the proxy server
+        # Note: This will print to stdout as needed. No other output should be printed to stdout in this mode.
+        return handle_hook(_POLICY)
+    else:
+        print("\n=== Starting proxy server ===")
+        print("Note: The proxy will start and wait for MCP client connections via stdio")
+        print("Press Ctrl+C to stop")
+        proxy.run()
 
 if __name__ == "__main__":
     main()
