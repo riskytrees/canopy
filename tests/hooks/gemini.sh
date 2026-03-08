@@ -1,4 +1,4 @@
-rm /tmp/.canopy/.sessions/test-123.json
+rm ~/.canopy/.sessions/test-123.json
 
 cat > test-input.json << 'EOF'
 {
@@ -30,6 +30,6 @@ if [ "$exit_code" -ne 2 ]; then
 fi
 
 rm test-input.json
-rm /tmp/.canopy/.sessions/test-123.json
+rm ~/.canopy/.sessions/test-123.json
 
-return $did_fail
+exit $did_fail
