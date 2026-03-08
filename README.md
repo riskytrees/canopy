@@ -57,9 +57,9 @@ When `canopy` starts, it will set the "default" flow as the active one. You can 
 
 ### Hook Mode
 
-Canopy can also run as a policy hook for environments that call external hooks before tool execution (for example, VS Code or Gemini). In this mode, Canopy reads a JSON hook payload from stdin, evaluates it against your policy, writes a JSON decision to stdout, and exits.
+Canopy can also run as a policy hook for environments that can call external hooks before tool execution (for example, VS Code or Gemini). In this mode, Canopy will check and enforce rule policies without needing to proxy MCP calls at all. 
 
-Run the hook process like this:
+To enable, simply register your agent hooks to run:
 
 ```
 python -m canopy_mcp <path_to_policy_file> --hook
@@ -68,9 +68,9 @@ python -m canopy_mcp <path_to_policy_file> --hook
 Notes:
 
 - Hook mode does not start the proxy server or read your MCP config. It only evaluates the incoming hook event.
-- Supported hook event names are `PreToolUse` (VS Code) and `BeforeTool` (Gemini), supplied as `hookEventName` or `hook_event_name`.
-- The hook uses `sessionId` or `session_id` to persist policy state across calls in `/tmp/.canopy/.sessions/<session_id>.json`.
-- Exit code `0` allows the tool call; exit code `2` blocks it and returns a structured deny response on stdout.
+- Supported hook event names are `PreToolUse` (VS Code) and `BeforeTool` (Gemini).
+- Session metadata, like the set of tool calls is stored in `~/.canopy/.sessions/<session_id>.json`.
+- This does not currently support prompt injection detection, due to the "need for speed" in hooks.
 
 #### Creating Flows
 

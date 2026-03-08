@@ -47,7 +47,7 @@ import os
 
 def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
     try:
-        with open(f"/tmp/.canopy/.sessions/{session_id}.json", "r") as f:
+        with open(os.path.expanduser(f"~/.canopy/.sessions/{session_id}.json"), "r") as f:
             state = json.load(f)
             policy.picked_flow = state.get("picked_flow")
             policy.seen_allowed_flows = set(state.get("seen_allowed_flows", []))
@@ -60,7 +60,7 @@ def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
 # This allows the policy to be reloaded in subsequent hook calls for the same session.
 # Stored in ~/.canopy/.sessions/{session_id}.json
 def save_policy_state(session_id, policy: CanopyPolicy) -> None:
-  session_dir = os.path.expanduser("/tmp/.canopy/.sessions")
+  session_dir = os.path.expanduser("~/.canopy/.sessions")
   os.makedirs(session_dir, exist_ok=True)
   session_file = os.path.join(session_dir, f"{session_id}.json")
   with open(session_file, "w") as f:
