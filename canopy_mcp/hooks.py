@@ -3,6 +3,7 @@ import json
 
 from canopy_mcp.policy import CanopyPolicy
 import os
+from canopy_mcp.audit import send_audit_log
 
 
 # VSCode Common Input:
@@ -153,8 +154,15 @@ def handle_hook(policy: CanopyPolicy) -> int:
     # Process the hook event
     session_id = input_data.get("sessionId", input_data.get("session_id"))
     hook_event_name = input_data.get("hookEventName", input_data.get("hook_event_name"))
+    tool_name = input_data.get("tool_name", "")
 
     policy = load_policy_state(policy, session_id)
+
+    try:
+      if hook_event_name in ["PreToolUse", "BeforeTool"] and tool_name:
+        send_audit_log(tool_name, str(session_id), policy.get_audit_webhook_url())
+    except Exception as e:
+      print(f"Audit webhook failed: {e}", file=sys.stderr)
 
     resp_code = None
 

@@ -1,3 +1,7 @@
+[auditing]
+# Optional destination webhook for tool-call audit events.
+# webhook_url = "https://example.com/audit"
+
 [flows]
 
 [flows.default]

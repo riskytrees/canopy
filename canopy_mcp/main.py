@@ -13,6 +13,7 @@ from transformers import pipeline
 from .policy import CanopyPolicy
 from .secret_resolver import resolve_canopy_secrets
 from .hooks import handle_hook
+from .audit import send_audit_log
 
 _POLICY = None
 
@@ -29,8 +30,20 @@ class PolicyMiddleware(Middleware):
         # Initialize any policy-related state here
         self.policy = policy
         self.classifier = None
+        self.audit_webhook_url = self.policy.get_audit_webhook_url()
         if os.getenv("HF_TOKEN") is not None:
             self.classifier = pipeline("text-classification", model="meta-llama/Prompt-Guard-86M")
+
+    def _get_session_id(self, context: MiddlewareContext) -> str:
+        session_id = getattr(context, "session_id", None)
+        if session_id:
+            return str(session_id)
+
+        source = getattr(context, "source", None)
+        if source:
+            return str(source)
+
+        return "unknown"
 
     async def on_message(self, context: MiddlewareContext, call_next):
         """Called for all MCP messages."""
@@ -39,6 +52,11 @@ class PolicyMiddleware(Middleware):
 
         if isinstance(message, mt.CallToolRequestParams):
             tool_name = message.name
+
+            try:
+                send_audit_log(tool_name, self._get_session_id(context), self.audit_webhook_url)
+            except Exception as e:
+                print(f"Audit webhook failed: {e}", file=sys.stderr)
 
             # Check if allowed
             if tool_name not in ["get_canopy_status", "change_canopy_flow"] and not self.policy.is_allowed(tool_name):
