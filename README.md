@@ -72,6 +72,29 @@ Notes:
 - Session metadata, like the set of tool calls is stored in `~/.canopy/.sessions/<session_id>.json`.
 - This does not currently support prompt injection detection, due to the "need for speed" in hooks.
 
+### Auditing Mode
+
+Canopy can optionally send an audit webhook for each tool call in both MCP proxy mode and hook mode.
+
+To enable it, add this top-level section to your policy file:
+
+```toml
+[auditing]
+webhook_url = "https://your-webhook-endpoint"
+```
+
+Canopy will send a `POST` request with JSON payload:
+
+```json
+{
+  "toolCall": "<Tool Call Name>",
+  "sessionId": "<Session identifier>",
+  "dateTime": "<datetime as UTC string>"
+}
+```
+
+No destination authentication is currently supported.
+
 #### Creating Flows
 
 Flows are the basic policy building blocks in canopy. Canopy can respect only one flow at a time.

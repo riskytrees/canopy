@@ -18,6 +18,11 @@ class CanopyPolicy():
         with open(path, "rb") as f:
             return tomllib.load(f)
 
+    def get_audit_webhook_url(self) -> str | None:
+        self.policy = self.load_policy(self.policy_path)
+        auditing = self.policy.get("auditing", {})
+        return auditing.get("webhook_url")
+
     def is_allowed(self, tool_call: str) -> bool:
         self.policy = self.load_policy(self.policy_path)
         picked_flow = self.picked_flow or "default"
