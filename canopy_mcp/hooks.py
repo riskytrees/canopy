@@ -66,16 +66,19 @@ def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
 # Stores important parts of CanopyPolicy in a session-specific file for later retrieval.
 # This allows the policy to be reloaded in subsequent hook calls for the same session.
 # Stored in ~/.canopy/.sessions/{session_id}.json
-def save_policy_state(session_id, policy: CanopyPolicy) -> None:
-  import tempfile
-  
+def save_policy_state(session_id, policy: CanopyPolicy) -> None:  
   session_dir = os.path.expanduser("~/.canopy/.sessions")
   os.makedirs(session_dir, exist_ok=True)
   session_file = os.path.join(session_dir, f"{session_id}.json")
   
   # Acquire exclusive lock before writing to prevent concurrent writes and read/write races
-  with open(session_file, "r+") as f:
+  # Open in append+read mode - creates file if needed, doesn't truncate existing content
+  with open(session_file, "a+") as f:
       try:
+          # Seek back from EOF (append mode defaults to end of file)
+          f.seek(0)
+          
+          # Acquire exclusive lock after creating the file handle
           fcntl.flock(f.fileno(), fcntl.LOCK_EX)  # Exclusive lock blocks other readers/writers
           
           # Read existing content (if any) to preserve it
