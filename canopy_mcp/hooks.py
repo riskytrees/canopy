@@ -49,9 +49,9 @@ from canopy_mcp.audit import send_audit_log
 
 def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
     try:
-        # Use shared lock for reading to prevent concurrent modifications during read
+        # Use exclusive lock for reading to ensure consistent state and preserve event ordering
         with open(os.path.expanduser(f"~/.canopy/.sessions/{session_id}.json"), "r") as f:
-            fcntl.flock(f.fileno(), fcntl.LOCK_SH)  # Shared lock allows multiple readers but blocks writers
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)  # Exclusive lock prevents concurrent reads/writes
             try:
                 state = json.load(f)
                 policy.picked_flow = state.get("picked_flow")
