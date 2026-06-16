@@ -1,5 +1,6 @@
 import sys
 import json
+import fcntl
 
 from canopy_mcp.policy import CanopyPolicy
 import os
@@ -48,10 +49,15 @@ from canopy_mcp.audit import send_audit_log
 
 def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
     try:
+        # Use shared lock for reading to prevent concurrent modifications during read
         with open(os.path.expanduser(f"~/.canopy/.sessions/{session_id}.json"), "r") as f:
-            state = json.load(f)
-            policy.picked_flow = state.get("picked_flow")
-            policy.seen_allowed_flows = set(state.get("seen_allowed_flows", []))
+            fcntl.flock(f.fileno(), fcntl.LOCK_SH)  # Shared lock allows multiple readers but blocks writers
+            try:
+                state = json.load(f)
+                policy.picked_flow = state.get("picked_flow")
+                policy.seen_allowed_flows = set(state.get("seen_allowed_flows", []))
+            finally:
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)  # Release lock after reading
     except FileNotFoundError:
         # No previous state found, continue with current policy
         pass
@@ -61,14 +67,48 @@ def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
 # This allows the policy to be reloaded in subsequent hook calls for the same session.
 # Stored in ~/.canopy/.sessions/{session_id}.json
 def save_policy_state(session_id, policy: CanopyPolicy) -> None:
+  import tempfile
+  
   session_dir = os.path.expanduser("~/.canopy/.sessions")
   os.makedirs(session_dir, exist_ok=True)
   session_file = os.path.join(session_dir, f"{session_id}.json")
-  with open(session_file, "w") as f:
-    json.dump({
-      "picked_flow": policy.picked_flow,
-      "seen_allowed_flows": list(policy.seen_allowed_flows)
-    }, f)
+  
+  # Acquire exclusive lock before writing to prevent concurrent writes and read/write races
+  with open(session_file, "r+") as f:
+      try:
+          fcntl.flock(f.fileno(), fcntl.LOCK_EX)  # Exclusive lock blocks other readers/writers
+          
+          # Read existing content (if any) to preserve it
+          current_content = json.loads(f.read()) if f.tell() > 0 else {}
+          
+          # Write new state, merging with existing fields if needed
+          new_state = {
+            "picked_flow": policy.picked_flow,
+            "seen_allowed_flows": list(policy.seen_allowed_flows),
+            **current_content  # Preserve any additional fields from previous write
+          }
+          
+          f.seek(0)
+          json.dump(new_state, f)
+      finally:
+          fcntl.flock(f.fileno(), fcntl.LOCK_UN)  # Release lock after writing
+
+# Cleanup function for session files (can be called when sessions are complete or on shutdown)
+def cleanup_session_files():
+    """Remove old session files to prevent stale locks and disk space issues."""
+    import glob
+    try:
+        pattern = os.path.expanduser("~/.canopy/.sessions/*.json")
+        # Only remove non-temporary files older than 1 hour (prevent accidental deletion)
+        for filepath in glob.glob(pattern):
+            if "tmp" not in filepath and "lock" not in filepath.lower():
+                try:
+                    os.remove(filepath)
+                except OSError as e:
+                    if e.errno != 2:  # File not found is OK (already deleted or never existed)
+                        raise
+    except Exception:
+        pass  # Ignore cleanup errors - don't fail on this operation
 
 
 
