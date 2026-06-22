@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "canopy_mcp"
-version = "0.9.0"
+version = "0.9.1"
 description = "An MCP proxy server and agentic hook tool that allows you to write and enforce policies on agent tool flows"
 authors = [
     { name = "RiskyTrees Labs", email = "hello@riskytrees.com" }
