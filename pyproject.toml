@@ -12,7 +12,7 @@ authors = [
 readme = "README.md"
 license = { file = "LICENSE.md" }
 requires-python = ">=3.11"
-dependencies = ["fastmcp", "torch", "transformers"]
+dependencies = ["fastmcp", "torch", "transformers", "filelock"]
 
 [project.urls]
 Homepage = "https://riskytrees.com/canopymcp"
