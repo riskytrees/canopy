@@ -4,7 +4,7 @@ import json
 from canopy_mcp.policy import CanopyPolicy
 import os
 from canopy_mcp.audit import send_audit_log
-
+from filelock import FileLock
 
 # VSCode Common Input:
 
@@ -47,6 +47,7 @@ from canopy_mcp.audit import send_audit_log
 # Other = Non-blocking warning: show warning to user, continue processing
 
 def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
+    session_file = f"~/.canopy/.sessions/{session_id}.json"
     try:
         with open(os.path.expanduser(f"~/.canopy/.sessions/{session_id}.json"), "r") as f:
             state = json.load(f)
@@ -54,6 +55,11 @@ def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
             policy.seen_allowed_flows = set(state.get("seen_allowed_flows", []))
     except FileNotFoundError:
         # No previous state found, continue with current policy
+        with open(session_file, "x") as f:
+            json.dump({
+                "picked_flow": None,
+                "seen_allowed_flows": []
+            }, f)
         pass
     return policy
 
@@ -64,6 +70,7 @@ def save_policy_state(session_id, policy: CanopyPolicy) -> None:
   session_dir = os.path.expanduser("~/.canopy/.sessions")
   os.makedirs(session_dir, exist_ok=True)
   session_file = os.path.join(session_dir, f"{session_id}.json")
+
   with open(session_file, "w") as f:
     json.dump({
       "picked_flow": policy.picked_flow,
@@ -156,24 +163,28 @@ def handle_hook(policy: CanopyPolicy) -> int:
     hook_event_name = input_data.get("hookEventName", input_data.get("hook_event_name"))
     tool_name = input_data.get("tool_name", "")
 
-    policy = load_policy_state(policy, session_id)
+    session_file = f"~/.canopy/.sessions/{session_id}.json"
+    lock_file = f"{session_file}.lock"
+    with FileLock(lock_file):
 
-    try:
-      if hook_event_name in ["PreToolUse", "BeforeTool"] and tool_name:
-        send_audit_log(tool_name, str(session_id), policy.get_audit_webhook_url())
-    except Exception as e:
-      print(f"Audit webhook failed: {e}", file=sys.stderr)
+        policy = load_policy_state(policy, session_id)
 
-    resp_code = None
+        try:
+            if hook_event_name in ["PreToolUse", "BeforeTool"] and tool_name:
+              send_audit_log(tool_name, str(session_id), policy.get_audit_webhook_url())
+        except Exception as e:
+             print(f"Audit webhook failed: {e}", file=sys.stderr)
 
-    if hook_event_name == "PreToolUse":
-        resp_code = pre_tool_use_hook(input_data, session_id, policy)
-    elif hook_event_name == "BeforeTool":
-        resp_code = before_tool_hook(input_data, session_id, policy)
-    else:
-        # Unknown hook event, continue processing
-        print(json.dumps({"continue": True}), file=sys.stdout)
-        resp_code = 0
+        resp_code = None
 
-    save_policy_state(session_id, policy)
+        if hook_event_name == "PreToolUse":
+            resp_code = pre_tool_use_hook(input_data, session_id, policy)
+        elif hook_event_name == "BeforeTool":
+            resp_code = before_tool_hook(input_data, session_id, policy)
+        else:
+            # Unknown hook event, continue processing
+            print(json.dumps({"continue": True}), file=sys.stdout)
+            resp_code = 0
+
+        save_policy_state(session_id, policy)
     return resp_code
