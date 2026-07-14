@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 
 from canopy_mcp.policy import CanopyPolicy
-import os
 from canopy_mcp.audit import send_audit_log
 from filelock import FileLock
 
@@ -55,6 +54,7 @@ def _session_dir() -> Path:
 def _session_file(session_id: str) -> Path:
     return _session_dir() / f"{session_id}.json"
 
+
 def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
     session_file = _session_file(str(session_id))
     try:
@@ -82,10 +82,10 @@ def save_policy_state(session_id, policy: CanopyPolicy) -> None:
     session_file = session_dir / f"{session_id}.json"
 
     with session_file.open("w") as f:
-                json.dump({
-                        "picked_flow": policy.picked_flow,
-                        "seen_allowed_flows": list(policy.seen_allowed_flows)
-                }, f)
+        json.dump({
+            "picked_flow": policy.picked_flow,
+            "seen_allowed_flows": list(policy.seen_allowed_flows)
+        }, f)
 
 
 
