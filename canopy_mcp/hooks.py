@@ -1,5 +1,6 @@
 import sys
 import json
+from pathlib import Path
 
 from canopy_mcp.policy import CanopyPolicy
 import os
@@ -46,16 +47,25 @@ from filelock import FileLock
 # 2 = Blocking error: stop processing and show error to model
 # Other = Non-blocking warning: show warning to user, continue processing
 
+
+def _session_dir() -> Path:
+    return Path("~/.canopy/.sessions").expanduser()
+
+
+def _session_file(session_id: str) -> Path:
+    return _session_dir() / f"{session_id}.json"
+
 def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
-    session_file = f"~/.canopy/.sessions/{session_id}.json"
+    session_file = _session_file(str(session_id))
     try:
-        with open(os.path.expanduser(f"~/.canopy/.sessions/{session_id}.json"), "r") as f:
+        with session_file.open("r") as f:
             state = json.load(f)
             policy.picked_flow = state.get("picked_flow")
             policy.seen_allowed_flows = set(state.get("seen_allowed_flows", []))
     except FileNotFoundError:
         # No previous state found, continue with current policy
-        with open(session_file, "x") as f:
+        session_file.parent.mkdir(parents=True, exist_ok=True)
+        with session_file.open("x") as f:
             json.dump({
                 "picked_flow": None,
                 "seen_allowed_flows": []
@@ -67,15 +77,15 @@ def load_policy_state(policy: CanopyPolicy, session_id) -> CanopyPolicy:
 # This allows the policy to be reloaded in subsequent hook calls for the same session.
 # Stored in ~/.canopy/.sessions/{session_id}.json
 def save_policy_state(session_id, policy: CanopyPolicy) -> None:
-  session_dir = os.path.expanduser("~/.canopy/.sessions")
-  os.makedirs(session_dir, exist_ok=True)
-  session_file = os.path.join(session_dir, f"{session_id}.json")
+    session_dir = _session_dir()
+    session_dir.mkdir(parents=True, exist_ok=True)
+    session_file = session_dir / f"{session_id}.json"
 
-  with open(session_file, "w") as f:
-    json.dump({
-      "picked_flow": policy.picked_flow,
-      "seen_allowed_flows": list(policy.seen_allowed_flows)
-    }, f)
+    with session_file.open("w") as f:
+                json.dump({
+                        "picked_flow": policy.picked_flow,
+                        "seen_allowed_flows": list(policy.seen_allowed_flows)
+                }, f)
 
 
 
@@ -163,9 +173,9 @@ def handle_hook(policy: CanopyPolicy) -> int:
     hook_event_name = input_data.get("hookEventName", input_data.get("hook_event_name"))
     tool_name = input_data.get("tool_name", "")
 
-    session_file = f"~/.canopy/.sessions/{session_id}.json"
-    lock_file = f"{session_file}.lock"
-    with FileLock(lock_file):
+    session_file = _session_file(str(session_id))
+    lock_file = session_file.parent / f"{session_file.name}.lock"
+    with FileLock(str(lock_file)):
 
         policy = load_policy_state(policy, session_id)
 
